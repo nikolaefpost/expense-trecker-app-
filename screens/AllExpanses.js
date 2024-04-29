@@ -3,7 +3,6 @@ import React from 'react';
 import {ExpensesOutput} from "../сomponents";
 import {useExpensesCtx} from "../store/context/expenses";
 
-
 const AllExpanses = () => {
     const { expenses} = useExpensesCtx()
     return (

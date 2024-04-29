@@ -1,13 +1,18 @@
-import React, {useLayoutEffect} from 'react';
-import {View, Text, StyleSheet, TextInput} from "react-native";
-import {IconButton, Button} from "../сomponents";
+import React, {useLayoutEffect, useState} from 'react';
+import {View, Text, StyleSheet} from "react-native";
+import {IconButton, Button, LoadingOverlay, ErrorOverlay} from "../сomponents";
 import {GlobalStyles} from "../constants/styles";
 import {useExpensesCtx} from "../store/context/expenses";
 import ExpenseForm from "../сomponents/ManagerExpense/ExpenseForm";
-// import {Button} from "../сomponents";
+import {storeExpense, updateExpenseServer, deleteExpenseServer} from "../util/http";
+import {useAuthCtx} from "../store/context/auth";
+
 
 const ManageExpenses = ({route, navigation}) => {
-    const {expenses, deleteExpense, updateExpense, addExpense} = useExpensesCtx()
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const {token} =useAuthCtx();
+    const [error, setError] = useState('')
+    const {expenses,  addExpense, updateExpense, deleteExpense} = useExpensesCtx()
     const editedExpenseId = route.params?.expenseId;
     const currentExpense = expenses.find(ex=>ex.id === editedExpenseId)
     const isEditing = Boolean(editedExpenseId)
@@ -17,24 +22,47 @@ const ManageExpenses = ({route, navigation}) => {
             title: isEditing ? "Edit Expense" : "Add Expense"
         })
     }, [navigation, isEditing]);
+    const errorHandler = () => {
+        setError("")
+    }
 
-    const deleteExpenseHandler = () => {
-        deleteExpense(editedExpenseId)
-        navigation.goBack();
+    const deleteExpenseHandler = async () => {
+        setIsSubmitting(true)
+        try{
+            await deleteExpenseServer(editedExpenseId)
+            deleteExpense(editedExpenseId)
+            navigation.goBack();
+        }catch (e) {
+            setIsSubmitting(false);
+            setError("Could not delete expense - please try again later")
+        }
+
     }
     const cancelHandler = () => {
         navigation.goBack();
     }
 
-    const confirmHandler = (expenseData) => {
-        if (isEditing) {
-            updateExpense(editedExpenseId, expenseData)
-        } else {
-            addExpense(expenseData)
+    const confirmHandler = async (expenseData) => {
+        setIsSubmitting(true)
+        try{
+            if (isEditing) {
+                await updateExpenseServer(editedExpenseId, expenseData)
+                updateExpense(editedExpenseId, expenseData)
+            } else {
+                const id = await storeExpense(expenseData, token)
+                addExpense({...expenseData, id})
+            }
+            navigation.goBack();
+        }catch (e) {
+            setIsSubmitting(false)
+            setError(isEditing? "Could not update expense - please try again later":
+                "Could not save data - please try again later")
         }
-        navigation.goBack();
+
     }
 
+    if (error && !isSubmitting) return <ErrorOverlay message={error} onConfirm={errorHandler}/>
+    if (isSubmitting) return <LoadingOverlay/>
 
     return (
         <View style={styles.container}>
