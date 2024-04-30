@@ -10,8 +10,9 @@ const LoginScreen = () => {
    const signInHandler = async ({email, password}) => {
       setIsAuthenticating(true)
       try{
-         const token = await signInUser(email, password);
-         authenticate(token);
+         const userAuthData = await signInUser(email, password);
+
+         authenticate(userAuthData);
       }catch (error){
          console.log(error)
          setIsAuthenticating(false)

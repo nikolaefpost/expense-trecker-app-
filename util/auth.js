@@ -13,8 +13,7 @@ const authenticate = async (mode, email, password) => {
             returnSecureToken: true
         },
     )
-    return response.data.idToken
-    // console.log(response.data)
+    return {token: response.data.idToken, uid: response.data.localId}
 }
 export const createUser =  (email, password) => {
      return  authenticate(createMode, email, password)

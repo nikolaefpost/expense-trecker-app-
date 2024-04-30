@@ -10,8 +10,8 @@ const SignupScreen = () => {
     const signupHandler = async ({email, password}) => {
         setIsAuthenticating(true)
         try{
-            const token = await createUser(email, password);
-            authenticate(token);
+            const userAuthData = await createUser(email, password);
+            authenticate(userAuthData);
         }catch (error) {
             setIsAuthenticating(false)
             Alert.alert(

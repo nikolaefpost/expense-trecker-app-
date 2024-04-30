@@ -6,6 +6,7 @@ export const ExpensesContext = createContext({
     addExpense: ({description, amount, date}) => {},
     setExpense: (expenses)=>{},
     deleteExpense: (id) => {},
+    deleteAllExpense: () =>{},
     updateExpense: (id, {description, amount, date}) => {},
 })
 
@@ -13,6 +14,8 @@ export const useExpensesCtx = () => useContext(ExpensesContext);
 
 const expensesReducer = (state, action) => {
     switch (action.type) {
+        case "DELETEALL":
+            return []
         case "DELETE":
             return state.filter(expense => expense.id !== action.payload);
         case "ADD":
@@ -31,8 +34,11 @@ const expensesReducer = (state, action) => {
 };
 
 const ExpensesContextProvider = ({children}) => {
-    const [expensesState, dispatch] = useReducer(expensesReducer, [])
+    const [expensesState, dispatch] = useReducer(expensesReducer, []);
 
+    const deleteAllExpense = () => {
+        dispatch({type: "DELETEALL"})
+    }
     const deleteExpense = (id) => {
         dispatch({type: "DELETE", payload: id})
     }
@@ -50,7 +56,8 @@ const ExpensesContextProvider = ({children}) => {
         deleteExpense,
         addExpense,
         updateExpense,
-        setExpense
+        setExpense,
+        deleteAllExpense
     }
     return (
         <ExpensesContext.Provider value={value}>

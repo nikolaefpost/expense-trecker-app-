@@ -1,6 +1,6 @@
 import React, {useLayoutEffect, useState} from 'react';
 import {View, Text, StyleSheet} from "react-native";
-import {IconButton, Button, LoadingOverlay, ErrorOverlay} from "../сomponents";
+import {IconButton, LoadingOverlay, ErrorOverlay} from "../сomponents";
 import {GlobalStyles} from "../constants/styles";
 import {useExpensesCtx} from "../store/context/expenses";
 import ExpenseForm from "../сomponents/ManagerExpense/ExpenseForm";
@@ -10,7 +10,7 @@ import {useAuthCtx} from "../store/context/auth";
 
 const ManageExpenses = ({route, navigation}) => {
     const [isSubmitting, setIsSubmitting] = useState(false)
-    const {token} =useAuthCtx();
+    const {token, uid} =useAuthCtx();
     const [error, setError] = useState('')
     const {expenses,  addExpense, updateExpense, deleteExpense} = useExpensesCtx()
     const editedExpenseId = route.params?.expenseId;
@@ -29,7 +29,7 @@ const ManageExpenses = ({route, navigation}) => {
     const deleteExpenseHandler = async () => {
         setIsSubmitting(true)
         try{
-            await deleteExpenseServer(editedExpenseId)
+            await deleteExpenseServer(token, uid, editedExpenseId)
             deleteExpense(editedExpenseId)
             navigation.goBack();
         }catch (e) {
@@ -46,10 +46,10 @@ const ManageExpenses = ({route, navigation}) => {
         setIsSubmitting(true)
         try{
             if (isEditing) {
-                await updateExpenseServer(editedExpenseId, expenseData)
+                await updateExpenseServer(token, uid, editedExpenseId, expenseData)
                 updateExpense(editedExpenseId, expenseData)
             } else {
-                const id = await storeExpense(expenseData, token)
+                const id = await storeExpense(token, uid, expenseData)
                 addExpense({...expenseData, id})
             }
             navigation.goBack();

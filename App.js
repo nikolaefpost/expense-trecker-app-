@@ -1,5 +1,5 @@
 import {StatusBar} from 'expo-status-bar';
-import {StyleSheet, Text, View} from 'react-native';
+import {StyleSheet, View} from 'react-native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {NavigationContainer, useNavigation} from "@react-navigation/native";
@@ -7,9 +7,9 @@ import {AllExpanses, LoginScreen, ManageExpenses, RecentExpenses, SignupScreen} 
 import {GlobalStyles} from "./constants/styles";
 import {Ionicons} from "@expo/vector-icons"
 import {IconButton} from "./сomponents";
-import ExpensesContextProvider from "./store/context/expenses";
+import ExpensesContextProvider, {useExpensesCtx} from "./store/context/expenses";
 import AuthContextProvider, {useAuthCtx} from "./store/context/auth";
-import {useEffect, useState} from "react";
+import {useEffect} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SplashScreen from 'expo-splash-screen';
 
@@ -41,6 +41,12 @@ const AuthStack = () => {
 
 const HeaderIcons = ({ tintColor}) => {
     const {logout } = useAuthCtx();
+    const {deleteAllExpense} = useExpensesCtx()
+
+    const handleLogout = () => {
+        logout();
+        deleteAllExpense()
+    }
     const navigation = useNavigation();
     return (
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
@@ -56,7 +62,7 @@ const HeaderIcons = ({ tintColor}) => {
                 icon="log-out-outline" // Log out icon
                 size={24}
                 color={tintColor}
-                onPress={logout} // Trigger the logout function
+                onPress={handleLogout} // Trigger the logout function
             />
         </View>
     );
@@ -66,7 +72,7 @@ const HeaderIcons = ({ tintColor}) => {
 const ExpensesOverview = () => {
     return (
         <BottomTabs.Navigator
-            screenOptions={({navigation}) => ({
+            screenOptions={() => ({
                 headerStyle: {backgroundColor: GlobalStyles.colors.primary500},
                 headerTintColor: "white",
                 tabBarStyle: {backgroundColor: GlobalStyles.colors.primary500},
@@ -150,9 +156,10 @@ const Root = () => {
                 // Prevent auto-hiding of the splash screen
                 await SplashScreen.preventAutoHideAsync();
 
-                const storageToken = await AsyncStorage.getItem('token');
-                if (storageToken !== null) {
-                    authenticate(storageToken);
+                const storageJson = await AsyncStorage.getItem('token')
+                if (storageJson !== null) {
+                    // const storageData = JSON.parse(storageJson)
+                    authenticate(JSON.parse(storageJson));
                 }
 
                 // Splash screen can be hidden after initialization
@@ -179,11 +186,11 @@ export default function App() {
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-});
+// const styles = StyleSheet.create({
+//     container: {
+//         flex: 1,
+//         backgroundColor: '#fff',
+//         alignItems: 'center',
+//         justifyContent: 'center',
+//     },
+// });

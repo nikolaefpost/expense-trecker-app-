@@ -5,11 +5,11 @@ export const AuthContext = createContext({
     token: "",
     uid: "",
     isAuthenticated: false,
-    authenticate: (token)=>{},
-    logout: ()=>{}
+    authenticate: (token) => {},
+    logout: () => {}
 })
 
-export const useAuthCtx = ()=> useContext(AuthContext);
+export const useAuthCtx = () => useContext(AuthContext);
 
 const AuthContextProvider = ({children}) => {
     const [authToken, setAuthToken] = useState('')
@@ -17,11 +17,13 @@ const AuthContextProvider = ({children}) => {
 
     useEffect(() => {
 
-        const getStorageToken = async () =>{
+        const getStorageToken = async () => {
             try {
-                const storageToken = await AsyncStorage.getItem('token');
-                if (storageToken !== null) {
-                    setAuthToken(storageToken)
+                const storageJson = await AsyncStorage.getItem('token')
+                if (storageJson !== null) {
+                    const storageData = JSON.parse(storageJson)
+                    setAuthToken(storageData.token)
+                    setUserUid(storageData.uid)
                 }
             } catch (e) {
                 console.log(e)
@@ -32,10 +34,11 @@ const AuthContextProvider = ({children}) => {
         });
     }, []);
 
-    const authenticate = async (token) => {
-      setAuthToken(token)
+    const authenticate = async (userAuthData) => {
+        setAuthToken(userAuthData.token)
+        setUserUid(userAuthData.uid)
         try {
-            await AsyncStorage.setItem('token', token);
+            await AsyncStorage.setItem('token', JSON.stringify(userAuthData))
         } catch (e) {
             console.log(e)
         }
@@ -43,6 +46,7 @@ const AuthContextProvider = ({children}) => {
 
     const logout = async () => {
         setAuthToken(null)
+        setUserUid(null)
         try {
             await AsyncStorage.removeItem('token')
         } catch (e) {
@@ -52,12 +56,12 @@ const AuthContextProvider = ({children}) => {
 
     const value = {
         token: authToken,
-        uid: "",
+        uid: userUid,
         isAuthenticated: Boolean(authToken),
         authenticate,
         logout
     }
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export default AuthContextProvider
